@@ -1,0 +1,5 @@
+﻿Workspace: E:\deepseekharness\patch_policy_ttt
+Patch Policy copy: E:\deepseekharness\patch_policy_ttt\vendor\patch_policy
+RoboTTT copy: E:\deepseekharness\patch_policy_ttt\vendor\robo_ttt
+Button env copy: E:\deepseekharness\patch_policy_ttt\button_task\button_env_v2.py
+Original data stays at: E:\WM\turbovla\data\button_demos

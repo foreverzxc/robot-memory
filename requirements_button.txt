@@ -1,0 +1,10 @@
+# 按钮环境额外依赖
+# 注意：ButtonEnv 在 E:\WM\turbovla 中已验证需要 robosuite 1.4.x + mujoco 2.3.x。
+# Patch Policy 官方 conda_env.yml 写的是 mujoco 3.2.7，不要把两个环境混用。
+
+h5py
+robosuite==1.4.1
+mujoco==2.3.7
+
+# 如果使用 E:\WM\turbovla\.venv 作为按钮环境，则只需补装 Patch Policy 依赖：
+#   pip install -r requirements_extra.txt

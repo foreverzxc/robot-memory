@@ -1,0 +1,194 @@
+tree:
+  - id: N01
+    type: question
+    support_level: explicit
+    source_refs: ["HANDOFF.md §5", "RoboTTT paper §2"]
+    title: "Can test-time training scale the two-button password policy context?"
+    description: "Whether TTT fast weights can store press progress and solve 6-press password tasks for train and held-out passwords."
+
+  - id: N02
+    type: decision
+    support_level: explicit
+    source_refs: ["researcher instruction: use per-layer TTT + more tokens"]
+    title: "Adopt per-layer TTT with patch tokens instead of single post-ln_f TTT with CLS tokens"
+    description: "Place one TTT module after every GPT attention block; use patch@112 so each timestep has 128 tokens for the inner loop."
+    choice: "Per-layer TTT with patch@112"
+    alternatives: ["single TTT after ln_f with CLS tokens", "single TTT after ln_f with patch tokens"]
+    evidence: [C01, C02]
+
+  - id: N03
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b4_ttt_perlayer_patch112_smoke/log.jsonl"]
+    title: "Five-epoch curriculum smoke training"
+    description: "Remaining-length curriculum ramps 1→6; train loss decreases across epochs; epoch-5 holdout success measured."
+    result: "Holdout success 0.125 at epoch 5; training loss 33.872812."
+    evidence: [C03, C04]
+
+  - id: N05
+    type: decision
+    support_level: explicit
+    source_refs: ["researcher instruction: continue training if loss not converged, cap 50 epochs"]
+    title: "Continue full-sequence training after curriculum phase"
+    description: "Continue from snapshots in blocks of 5–10 epochs; stop when loss plateaus or the 50-epoch cap is reached."
+    choice: "Continue in checkpoint blocks with a 50-epoch total cap"
+    alternatives: ["stop at 10 epochs", "restart curriculum from scratch", "continue indefinitely"]
+    evidence: [C03]
+
+  - id: N06
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b4_ttt_perlayer_patch112_ep10/log.jsonl"]
+    title: "Continuation to 10 total epochs"
+    description: "Five full-sequence epochs; epoch-10 holdout success measured."
+    result: "Holdout success 0.625 at epoch 10; training loss 17.162408."
+    evidence: [C03, C04]
+
+  - id: N08
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b4_ttt_perlayer_patch112_ep20/log.jsonl"]
+    title: "Continuation to 20 total epochs"
+    description: "Ten full-sequence epochs; epoch-20 holdout success measured."
+    result: "Holdout success 0.9375 at epoch 20; training loss 9.061348."
+    evidence: [C03, C04]
+
+  - id: N10
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b4_ttt_perlayer_patch112_ep30/log.jsonl"]
+    title: "Continuation toward 30 total epochs (convergence gate)"
+    description: "Train until loss plateaus; final evaluation and fps=20 GIFs pending."
+    result: "in progress"
+    evidence: [C03, C04]
+
+  - id: N11
+    type: dead_end
+    support_level: explicit
+    source_refs: ["earlier b3 runs; code review"]
+    title: "Single post-ln_f TTT with CLS tokens and clamped inner lr"
+    description: "Early b3_ttt_carry runs reached holdout 0.0; review found clamped lr, 2-token inner mini-batch, and post-ln_f placement insufficient."
+    hypothesis: "A single post-ln_f TTT module with two CLS tokens per timestep would provide enough memory."
+    failure_mode: "Holdout success remained 0.0; the inner learning rate was pinned at its clamp and the inner mini-batch was only 2 tokens."
+    lesson: "TTT placement, inner-loop batch size, and inner-lr parameterization materially affect capacity."
+    evidence: []
+
+  - id: N12
+    type: dead_end
+    support_level: explicit
+    source_refs: ["train_button_ttt.py review"]
+    title: "Batch-averaged fast-weight loss and late TBPTT setup"
+    description: "Original inner update averaged MSE across the batch (1/B scaling) and carry-windows TBPTT was configured after module construction; both caused train/inference or multi-chunk errors."
+    hypothesis: "A batch-averaged MSE gradient and post-hoc TBPTT configuration would be sufficient."
+    failure_mode: "Batched B=2 updates differed from independent B=1 updates by a 1/B factor; a second carry chunk failed with a graph-already-backwarded error."
+    lesson: "Per-sample inner gradients and chunk-boundary detach configured at module construction are required."
+    evidence: [C02]
+
+  - id: N13
+    type: decision
+    support_level: explicit
+    source_refs: ["researcher instruction: short segments start mid-episode to end"]
+    title: "Use remaining-password-length curriculum, not sequence-length-only curriculum"
+    description: "Short contexts are suffix chunks with few remaining presses; loss opens from short remaining suffixes to full episodes."
+    choice: "Remaining-password-length curriculum"
+    alternatives: ["sequence-length-only curriculum", "no curriculum"]
+    evidence: [C03]
+
+  - id: N14
+    type: decision
+    support_level: explicit
+    source_refs: ["researcher instruction: all passwords covered"]
+    title: "Adopt best-effort labels for the 3 replay-failed passwords"
+    description: "Replay counts trusted through the penultimate press; final frame corrected; merged labels cover 48/48 train passwords."
+    choice: "Best-effort final-press correction for replaypc == h5pc - 1"
+    alternatives: ["exclude the 3 passwords", "trust all replay counts", "hand-label frames"]
+    evidence: [C05]
+    also_depends_on: [N11]
+
+  - id: N15
+    type: dead_end
+    support_level: explicit
+    source_refs: ["runs/b7_patch_overfit_small/log.jsonl", "runs/b6_aux3_overfit_small2/log.jsonl"]
+    title: "Hypothesis that patch@112 would converge faster than cls@224"
+    description: "User insight: patch tokens carry more per-step information and might reduce total training time despite higher per-step cost."
+    hypothesis: "patch@112 would reach lower loss / working rollouts faster than cls@224."
+    failure_mode: "Matched small overfit runs (single demo 111222, 60 epochs, lr=1e-4): patch final train_loss 39.19 vs cls 30.59; both rollout press=0."
+    lesson: "At small scale patch@112 did not converge faster; formal encoder remains cls@224."
+    evidence: ["runs/b7_patch_overfit_small", "runs/b6_aux3_overfit_small2"]
+
+  - id: N16
+    type: dead_end
+    support_level: explicit
+    source_refs: ["runs/b6_aux3_overfit_small2/TOKEN_DIAG.md"]
+    title: "Token-swap diagnostic on a single-password model"
+    description: "First token diagnostic fed 222111 to a model trained only on 111222 and expected behavior change."
+    hypothesis: "No behavior change proves the model does not read password tokens."
+    failure_mode: "A model trained on one password has no incentive to distinguish tokens, so unchanged behavior is expected and the result is inconclusive."
+    lesson: "Token-swap diagnostics must be run on a model trained with at least two passwords; later corrected in b8_token_swap_diag."
+
+  - id: N17
+    type: dead_end
+    support_level: explicit
+    source_refs: ["vendor/patch_policy/models/vq_behavior_transformer/bet.py"]
+    title: "Stochastic VQ center sampling at inference"
+    description: "_sample_action used torch.multinomial for every forward, including model.eval() rollouts."
+    hypothesis: "Multinomial sampling at inference is equivalent to the Patch Policy rollout protocol."
+    failure_mode: "Rollouts were noisy and could not reproduce trained actions; argmax eval produced actions much closer to demos and allowed token-conditioned presses."
+    lesson: "Sample VQ centers during training, use argmax during eval; fixed in bet.py and verified reproducible (press=5 for password 122221 reproduced exactly)."
+
+  - id: N18
+    type: dead_end
+    support_level: explicit
+    source_refs: ["runs/b9_cls_medium_fullpw/FAILED.md", "runs/full48_labels.npz"]
+    title: "Reusing full48_labels.npz with random_pw6_lang_100"
+    description: "Medium run passed --labels full48_labels.npz while training on the 100-demo dataset."
+    hypothesis: "Same-named demo groups imply matching per-frame label lengths."
+    failure_mode: "IndexError at train_button_ttt.py:674 (counts index out of bounds) because same-named demos from different datasets have different episode lengths."
+    lesson: "Labels are dataset-specific; regenerate labels for each HDF5 (runs/medium100_labels.npz, 36 episodes) or use prog-weight=0."
+
+  - id: N19
+    type: dead_end
+    support_level: explicit
+    source_refs: ["scripts/eval_button_checkpoint.py"]
+    title: "Using --action-window override on a trained checkpoint"
+    description: "An exploratory eval passed --action-window 1 for a checkpoint trained with action window 12."
+    hypothesis: "The override only changes rollout ensembling, not model architecture."
+    failure_mode: "It rebuilds BehaviorTransformer with act_window_size=1, most checkpoint head weights are shape-filtered away, so the eval is meaningless."
+    lesson: "Never override action-window on a checkpoint; eval_button_checkpoint.py now raises if the override mismatches the training args."
+
+  - id: N20
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b8_token_swap_diag_cont/token_swap_results_argmax.txt"]
+    title: "Multi-password token-swap diagnostic after argmax fix"
+    description: "Train 111222 + 222111 (3 demos) for 40+30 epochs cls@224; eval env/token combos with argmax."
+    result: "env=222111 + correct token presses 3; wrong token presses 0. env=111222 combos press 0 but wrong token fails at step 75. Token-conditioned behavior observed."
+    evidence: ["runs/b8_token_swap_diag", "runs/b8_token_swap_diag_cont"]
+
+  - id: N21
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b9_cls_medium_fullpw_prog_cont/log.jsonl", "runs/b9_cls_medium_fullpw_prog_cont/diag_112212.txt"]
+    title: "Medium cls@224 full-password training"
+    description: "random_pw6_lang_100 (80 train / 20 holdout episodes), full-password protocol, cls@224, argmax eval; no-prog 30 epochs then progress-head 30 epochs."
+    result: "First holdout success achieved at cont2: password 122221 success=1 press=6 steps=344 (reproduced with eval script). Other holdout passwords reach 4-5 presses. Overall holdout success 1/16."
+    evidence: ["runs/b9_cls_medium_fullpw_noprog", "runs/b9_cls_medium_fullpw_noprog_cont", "runs/b9_cls_medium_fullpw_noprog_cont2", "runs/b9_cls_medium_fullpw_prog", "runs/b9_cls_medium_fullpw_prog_cont"]
+
+  - id: N22
+    type: experiment
+    support_level: explicit
+    source_refs: ["runs/b10_full48_cls_opt/log.jsonl", "ara/evidence/results/full48_cls.md"]
+    title: "Full 48/16 cls@224 full-password training (optimized)"
+    description: "random_pw6_lang_1000 (764 train / 236 holdout), cls@224, batch=8, embedding cache + light shards, prog-weight=1.0, resumed from epoch-4 snapshot for 10 epochs."
+    result: "Holdout success 13/16 = 0.8125 (2-repeat eval 26/32); train sampled 2/2. Epoch time reduced from ~4200s to ~2630s after embedding cache."
+    evidence: ["runs/b10_full48_cls", "runs/b10_full48_cls_opt"]
+
+  - id: N23
+    type: dead_end
+    support_level: explicit
+    source_refs: ["environment repair notes in PLAN_NEXT.md"]
+    title: "Incompatible torch/torchvision/numpy versions in the project venv"
+    description: "Mid-evaluation the venv broke: numpy lacked its _internal C extension and torch 2.11+cu128 was paired with torchvision 0.22.1+cu128, producing RuntimeError: operator torchvision::nms does not exist."
+    hypothesis: "Upgrading torch alone is safe."
+    failure_mode: "Eval crashed on numpy circular import and torchvision operator registration."
+    lesson: "Keep torch/torchvision/xformers/numpy as a matched set. Restored to numpy 1.26.4, torch 2.7.1+cu128, torchvision 0.22.1+cu128 with uv."

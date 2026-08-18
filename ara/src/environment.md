@@ -1,0 +1,24 @@
+# Environment
+
+- **Language/runtime**: Python 3.10.20 (MSC v.1944 64-bit), Windows
+- **Framework**: PyTorch 2.7.1+cu128, CUDA 12.8
+- **Hardware**: NVIDIA RTX 5060 Ti 16GB (single GPU)
+- **Data sources**:
+  - `E:\WM\turbovla\data\button_demos\random_pw6_lang_1000\demos.h5` (1000 episodes, 64 passwords, ~127 GB)
+  - `E:\WM\turbovla\data\button_demos\random_pw6_lang_100\demos.h5` (diagnostic/auxiliary)
+  - `E:\deepseekharness\patch_policy_ttt\button_task\password_split.json` (48 train / 16 holdout)
+  - `E:\deepseekharness\patch_policy_ttt\runs\full48_labels.npz` (317 labeled train episodes, 48/48 passwords)
+- **Key dependencies**:
+  - h5py 3.16.0
+  - numpy 1.26.4
+  - matplotlib 3.10.9
+  - Pillow 12.3.0
+  - robosuite / mujoco from the button venv at `E:\WM\turbovla\.venv`
+  - einops, torch.func
+- **Protocols**:
+  - Training entry: `train_button_ttt.py`
+  - Evaluation entry: `eval_button_checkpoint.py` / `eval_in_sim` inside the training script
+  - GIF generation: `scripts/visualize_button_rollouts.py` (default fps=20)
+  - Label generation: `scripts/label_button_demos.py`, `scripts/label_missing_best_effort.py`
+- **Random seeds**: 42 (training and environment), plus per-demo seeds stored in HDF5 attributes for label replay
+- **Precision**: bf16 autocast for training and inference; fast-weight inner gradients computed under autocast with fp32 norm clipping

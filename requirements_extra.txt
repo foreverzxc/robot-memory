@@ -1,0 +1,26 @@
+# RoboTTT 及本实验额外依赖
+# Patch Policy 主体依赖优先使用其 conda_env.yml 创建的环境。
+
+# RoboTTT 运行依赖（E:\deepseekharness\robo_ttt\pyproject.toml）
+einx>=0.3.0
+einops>=0.8.1
+rotary-embedding-torch
+torch-einops-utils>=0.1.12
+
+# PushT 本地环境需要的核心包（若不想安装完整 conda_env.yml）
+# torch/torchvision 请按机器 CUDA 版本单独安装
+gym==0.23.1
+pygame
+pymunk
+shapely
+opencv-python
+scikit-image
+matplotlib
+
+# Patch Policy 训练/评测框架
+hydra-core==1.2.0
+omegaconf
+accelerate
+diffusers
+wandb
+huggingface_hub
