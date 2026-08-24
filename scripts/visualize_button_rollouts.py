@@ -1,4 +1,4 @@
-"""Visualize trained button-policy rollouts as GIFs.
+﻿"""Visualize trained button-policy rollouts as GIFs.
 
 Loads a checkpoint trained by train_button_ttt.py, rolls out the policy in
 ButtonEnv, and writes annotated agentview GIFs. Passwords are sampled
@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import einops
 import numpy as np
@@ -259,3 +259,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

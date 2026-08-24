@@ -1,0 +1,7 @@
+﻿# Dependencies used directly by the RoboMME cache/evaluation scripts.
+h5py
+numpy
+Pillow
+
+# Install a CUDA-compatible PyTorch build separately for the target machine.
+# The decoder builder is provided by the external TurboVLA workspace.

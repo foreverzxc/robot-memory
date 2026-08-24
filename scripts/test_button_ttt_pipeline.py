@@ -1,4 +1,4 @@
-"""B2/B3 pipeline checks: TTT sequence layer, GPT integration, sequence windows.
+﻿"""B2/B3 pipeline checks: TTT sequence layer, GPT integration, sequence windows.
 
 Run with the button venv:
     E:\\WM\\turbovla\\.venv\\Scripts\\python.exe scripts\\test_button_ttt_pipeline.py
@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import torch
 import einops
@@ -451,3 +451,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

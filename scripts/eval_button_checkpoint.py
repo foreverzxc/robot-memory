@@ -1,4 +1,4 @@
-"""Offline evaluation of a trained checkpoint on the button simulator.
+﻿"""Offline evaluation of a trained checkpoint on the button simulator.
 
 Loads a checkpoint saved by train_button.py (best.pt / snapshot.pt / model_*.pt)
 and rolls out the policy in ButtonEnv on the given passwords.
@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import numpy as np
 import torch
@@ -276,3 +276,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

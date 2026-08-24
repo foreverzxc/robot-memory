@@ -1,4 +1,4 @@
-"""Probe whether no-TTT policy features encode task progress (next_key / count).
+﻿"""Probe whether no-TTT policy features encode task progress (next_key / count).
 
 Loads a trained checkpoint, extracts detached GPT features for each demo frame,
 then trains AuxProbeHeads on train episodes and reports next_key / press_count
@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import h5py
 import numpy as np
@@ -318,3 +318,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

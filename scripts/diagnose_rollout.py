@@ -1,11 +1,11 @@
-"""Diagnose a single policy rollout with per-step action and env-state logs."""
+﻿"""Diagnose a single policy rollout with per-step action and env-state logs."""
 from __future__ import annotations
 import argparse, json, os, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import einops
 import numpy as np
@@ -162,3 +162,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

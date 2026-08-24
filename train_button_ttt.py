@@ -1,4 +1,4 @@
-"""Stage B2/B3: VQ-BeT + TTT training on the button task.
+﻿"""Stage B2/B3: VQ-BeT + TTT training on the button task.
 
 Chunked sequence training with a test-time-training layer attached to the GPT
 observation token stream (see button_task/ttt_layer.py). Groups:
@@ -41,7 +41,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import einops
 import numpy as np
@@ -987,3 +987,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

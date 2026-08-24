@@ -1,3 +1,39 @@
-.vscode
+﻿.vscode
 
-runs
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.numba_cache/
+
+# Local data, checkpoints, logs, and generated videos.
+runs/
+data/*
+!data/.gitkeep
+weights/*
+!weights/README.md
+*.h5
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.mp4
+*.gif
+*.log
+
+# Local environments and editor state.
+.venv/
+.venv*/
+.mypy_cache/
+
+# Large third-party assets are downloaded separately.
+vendor/patch_policy/assets/
+vendor/patch_policy/envs/libero/assets/
+vendor/patch_policy/envs/cube/descriptions/*/assets/
+
+# Local source copies retained for comparison; public source is under model_core.
+vendor/patch_policy/
+vendor/robo_ttt/
+vendor/model_core/assets/
+vendor/model_core/envs/libero/assets/
+vendor/model_core/envs/cube/descriptions/*/assets/
+vendor/robo_ttt_core/**/__pycache__/

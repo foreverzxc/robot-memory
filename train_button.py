@@ -1,6 +1,6 @@
-"""Stage B1: train VQ-BeT (Patch Policy) with password tokens on the button task.
+﻿"""Stage B1: train VQ-BeT (Patch Policy) with password tokens on the button task.
 
-Standalone script — no hydra/wandb/accelerate needed. Run with the button venv:
+Standalone script 鈥?no hydra/wandb/accelerate needed. Run with the button venv:
 
     $env:MUJOCO_GL = "glfw"
     E:\\WM\\turbovla\\.venv\\Scripts\\python.exe train_button.py --h5 <demos.h5> \
@@ -24,7 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "vendor" / "patch_policy"))
+sys.path.insert(0, str(ROOT / "vendor" / "model_core"))
 
 import einops
 import numpy as np
@@ -547,3 +547,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
