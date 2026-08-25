@@ -2,6 +2,8 @@
 h5py
 numpy
 Pillow
+imageio
+imageio-ffmpeg
 
 # Install a CUDA-compatible PyTorch build separately for the target machine.
 # The decoder builder is provided by the external TurboVLA workspace.

@@ -66,6 +66,7 @@ The RoboMME scripts are:
 scripts/cache_robomme_ttt.py       Build compact feature caches
 scripts/split_robomme_cache.py     Make reproducible episode splits
 scripts/evaluate_robomme_ttt.py    Offline held-out action evaluation
+scripts/rollout_robomme_ttt.py     Simulator rollout and MP4 visualization
 ~~~
 
 They use the RoboMME HDF5 format and the existing decoder-training code from
@@ -75,6 +76,22 @@ the default paths in the scripts are only for the original local workspace.
 The current offline metrics are action-space diagnostics. They are not
 simulator success rates. A simulator rollout must report episode outcomes
 such as success, failure, timeout, and a saved video.
+
+Run one simulator episode after installing the external TurboVLA workspace and
+the official RoboMME environment:
+
+~~~bash
+python scripts/rollout_robomme_ttt.py \
+  --task PickXtimes \
+  --turbo-root /path/to/turbovla \
+  --episode 0
+~~~
+
+Use `--task SwingXtimes` for the second checkpoint, or `--episode -1` to run
+all episodes in the selected split. The script reports success rate and writes
+an MP4 plus a JSON summary under `runs/robomme_rollouts/`. The two small
+task-specific normalization files are tracked in `weights/`; model weights
+themselves stay local.
 
 ## Environment
 
