@@ -4,6 +4,9 @@ numpy
 Pillow
 imageio
 imageio-ffmpeg
+transformers
+timm
+huggingface_hub
 
 # Install a CUDA-compatible PyTorch build separately for the target machine.
-# The decoder builder is provided by the external TurboVLA workspace.
+# The base-policy builder is vendored under vendor/base_policy.

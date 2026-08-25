@@ -69,21 +69,20 @@ scripts/evaluate_robomme_ttt.py    Offline held-out action evaluation
 scripts/rollout_robomme_ttt.py     Simulator rollout and MP4 visualization
 ~~~
 
-They use the RoboMME HDF5 format and the existing decoder-training code from
-the external TurboVLA workspace. Pass all paths explicitly on a new machine;
-the default paths in the scripts are only for the original local workspace.
+The simulator rollout uses the vendored base-policy runtime in
+`vendor/base_policy/`. It does not require a separate model-code checkout.
+Missing base-policy assets are downloaded into `weights/` from Hugging Face at
+startup. The DINOv3 repository may require `hf auth login` because it is gated.
 
 The current offline metrics are action-space diagnostics. They are not
 simulator success rates. A simulator rollout must report episode outcomes
 such as success, failure, timeout, and a saved video.
 
-Run one simulator episode after installing the external TurboVLA workspace and
-the official RoboMME environment:
+Run one simulator episode after installing the official RoboMME environment:
 
 ~~~bash
 python scripts/rollout_robomme_ttt.py \
   --task PickXtimes \
-  --turbo-root /path/to/turbovla \
   --episode 0
 ~~~
 
@@ -92,6 +91,24 @@ all episodes in the selected split. The script reports success rate and writes
 an MP4 plus a JSON summary under `runs/robomme_rollouts/`. The two small
 task-specific normalization files are tracked in `weights/`; model weights
 themselves stay local.
+
+The first run downloads the frozen base checkpoint, DINOv3, and BERT into
+`weights/`. To authenticate for the gated DINOv3 repository:
+
+~~~bash
+pip install -U huggingface_hub
+hf auth login
+~~~
+
+You can also download these assets before starting the simulator:
+
+~~~bash
+python scripts/download_robomme_base.py
+~~~
+
+The trained TTT decoder checkpoints are experiment artifacts and are not
+published by this repository. Place them at the paths listed in
+`weights/README.md` or pass `--checkpoint` explicitly.
 
 ## Environment
 
@@ -111,7 +128,7 @@ uv pip install -e .
 ~~~
 
 The current repository does not vendor the RoboMME simulator, training data,
-TurboVLA checkpoints, or generated rollout artifacts.
+large model checkpoints, or generated rollout artifacts.
 
 ## License and provenance
 

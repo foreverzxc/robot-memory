@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from collections import deque
 from pathlib import Path
@@ -12,9 +11,12 @@ from pathlib import Path
 import imageio.v2 as imageio
 import numpy as np
 import torch
+from transformers import AutoImageProcessor
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 CHUNK = 12
 ACTION_DIM = 7
 STATE_DIM = 8
@@ -30,10 +32,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=REPO_ROOT / "runs" / "robomme_rollouts")
     parser.add_argument("--checkpoint", type=Path, default=None)
     parser.add_argument("--stats", type=Path, default=None)
-    parser.add_argument("--turbo-root", type=Path, required=True)
+    parser.add_argument("--weights-dir", type=Path, default=REPO_ROOT / "weights")
     parser.add_argument("--base-ckpt", type=Path, default=None)
     parser.add_argument("--dinov3-path", type=Path, default=None)
     parser.add_argument("--bert-path", type=Path, default=None)
+    parser.add_argument("--no-download", action="store_true")
     parser.add_argument("--no-online-updates", action="store_true")
     parser.add_argument("--seed", type=int, default=0)
     return parser.parse_args()
@@ -143,19 +146,11 @@ def load_stats(path: Path) -> dict:
 
 
 def load_models(args: argparse.Namespace):
-    turbo_root = args.turbo_root.resolve()
-    os.chdir(turbo_root)
-    sys.path.insert(0, str(turbo_root))
-    sys.path.insert(0, str(turbo_root / "TurboVLA"))
-
-    from decoder_ttt import DecoderWithTTT
-    from eval_ttt_decoder import make_processor
-    from train_ttt_decoder import build_base_model
+    from references.decoder_ttt import DecoderWithTTT
+    from vendor.base_policy.builder import build_base_model
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    base = build_base_model(
-        str(args.base_ckpt), str(args.dinov3_path), str(args.bert_path)
-    )
+    base = build_base_model(args.base_ckpt, args.dinov3_path, args.bert_path, device)
     base.eval()
     base.to(device)
 
@@ -168,7 +163,13 @@ def load_models(args: argparse.Namespace):
     decoder_ttt.eval()
     for parameter in decoder_ttt.parameters():
         parameter.requires_grad_(False)
-    processor = make_processor(str(args.dinov3_path))
+    processor = AutoImageProcessor.from_pretrained(
+        args.dinov3_path, local_files_only=True
+    )
+    if hasattr(processor, "do_resize"):
+        processor.do_resize = False
+    if hasattr(processor, "do_center_crop"):
+        processor.do_center_crop = False
     return base, decoder_ttt, processor, device
 
 
@@ -230,28 +231,35 @@ def run_episode(
 
 def main() -> int:
     args = parse_args()
-    args.turbo_root = args.turbo_root.expanduser().resolve()
+    args.weights_dir = args.weights_dir.expanduser().resolve()
     args.checkpoint = (
         args.checkpoint
         or REPO_ROOT / "weights" / f"decoder_ttt_{args.task.lower()}_split80.pth"
     ).expanduser().resolve()
     args.stats = (
-        args.stats or REPO_ROOT / "weights" / f"{args.task.lower()}_stats.json"
+        args.stats or args.weights_dir / f"{args.task.lower()}_stats.json"
     ).expanduser().resolve()
     args.base_ckpt = (
-        args.base_ckpt or args.turbo_root / "weights" / "libero" / "spatial.pth"
+        args.base_ckpt or args.weights_dir / "libero" / "spatial.pth"
     ).expanduser().resolve()
     args.dinov3_path = (
-        args.dinov3_path or args.turbo_root / "weights" / "dinov3"
+        args.dinov3_path or args.weights_dir / "dinov3"
     ).expanduser().resolve()
     args.bert_path = (
-        args.bert_path or args.turbo_root / "weights" / "bert"
+        args.bert_path or args.weights_dir / "bert"
     ).expanduser().resolve()
     args.output_dir = args.output_dir.expanduser().resolve()
 
+    if not args.no_download:
+        from vendor.base_policy.downloads import ensure_base_policy_weights
+
+        ensure_base_policy_weights(args.base_ckpt, args.dinov3_path, args.bert_path)
+
     for path in (args.checkpoint, args.stats, args.base_ckpt, args.dinov3_path, args.bert_path):
         if not path.exists():
-            raise FileNotFoundError(path)
+            raise FileNotFoundError(
+                f"missing {path}; remove --no-download or prepare this local file"
+            )
     if args.max_steps <= 0:
         raise ValueError("--max-steps must be positive")
     if args.num_episodes is not None and args.num_episodes <= 0:

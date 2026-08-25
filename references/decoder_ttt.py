@@ -9,7 +9,10 @@
 import torch
 import torch.nn as nn
 
-from paper_ttt import FastMLP, inner_update
+try:
+    from .paper_ttt import FastMLP, inner_update
+except ImportError:
+    from paper_ttt import FastMLP, inner_update
 
 
 class TTTDecoderLayer(nn.Module):

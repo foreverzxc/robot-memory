@@ -11,5 +11,14 @@ weights/swingxtimes_stats.json
 ```
 
 The two `*_stats.json` files are small normalization metadata generated from
-the training splits and are tracked in this repository. Base TurboVLA,
-DINOv3, and BERT weights are supplied through `--turbo-root`.
+the training splits and are tracked in this repository. On the first rollout,
+the base checkpoint, DINOv3, and BERT are downloaded automatically from
+Hugging Face into this directory. DINOv3 may require `hf auth login`.
+
+The two decoder-TTT checkpoints are private experiment outputs and are not
+uploaded to GitHub. Copy them here from the training machine:
+
+```text
+weights/decoder_ttt_pickxtimes_split80.pth
+weights/decoder_ttt_swingxtimes_split80.pth
+```
